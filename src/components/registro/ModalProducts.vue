@@ -11,6 +11,7 @@
                 <div class="input-field">
                     <i class="material-icons prefix">shopping_basket</i>
                     <input
+                    ref="firstInput"
                     placeholder="Nombre del producto" 
                     type="text" 
                     class="validate"
@@ -29,7 +30,7 @@
                     </div>
                     
                     <div class="input-field">
-                        <i class="material-icons prefix">attach_money</i>
+                        <i class="material-icons prefix">account_balance_wallet</i>
                         <input 
                         placeholder="Precio" 
                         type="text"
@@ -77,6 +78,7 @@ export default{
 
         const categories = ref({})
         const showModal = ref(false)
+        const firstInput = ref(null)
 
         //Datos
         const name = ref("")
@@ -118,6 +120,7 @@ export default{
             axios.get(`${URL}/categories`).then(res => {
                 console.log(res)
                 categories.value = res.data
+                firstInput.value?.focus()
             })
         })
         return{
@@ -127,7 +130,8 @@ export default{
             stock,
             category_id,
             price_type,
-            sendProduct
+            sendProduct,
+            firstInput
         }
     }
 }
@@ -135,7 +139,7 @@ export default{
 
 <style scoped>
 .fade{
-    position: absolute;
+    position: fixed;
     background-color: rgba(0, 0, 0, 0.541);
     top: 0;
     left: 0;
