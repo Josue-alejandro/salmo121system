@@ -1,52 +1,25 @@
 <template>
-    <div class="titleDiv">
-        <h5>Productos</h5>
-    </div>
     <div class="tableDiv">
-        <div class="botones">
-            <button class="btn blue darken-1" @click="modalAddHandler"><i class="material-icons">add</i></button>
-            <button class="btn red darken-4" @click="deleteSelected"><i class="material-icons">delete</i></button>
-            <div class="input-field col s6">
-                <input 
-                id="first_name" 
-                type="text" 
-                class="validate"
-                v-model="searchQuery"
-                placeholder="Buscar...">
-            </div>
-        </div>
         <Transition>
         <div class="tableContainer" v-if="!loading">
-            <table>
-                <thead>
-                    <tr>
-                        <th @click="sortByProperty('name')" class="headerTable">Nombre</th>
-                        <th @click="sortByProperty('stock')" class="headerTable">Existencia</th>
-                        <th @click="sortByProperty('category')" class="headerTable">Categoría</th>
-                        <th @click="sortByProperty('price')" class="headerTable">Precio</th>
-                        <th @click="sortByProperty('price_type')" class="headerTable">Tipo</th>
-                        <th>Editar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="product in filteredProducts" :key="product.id" 
-                    :class="{ selected: selectedProducts.includes(product.id),
-                              rowNormal: true
-                    }" 
-                    @click="toggleSelection(product.id)">
-                    <td>{{ product.name }}</td>
-                    <td>{{ product.stock }}</td>
-                    <td>{{ product.category }}</td>
-                    <td>{{ product.price }} Bs</td>
-                    <td>{{ product.price_type }}</td>
-                    <td 
-                    class="editTd">
-                    <i 
-                    @click="modalEditHandler(product)"
-                    class="material-icons">edit</i></td>
-                    </tr>
-                </tbody>
-            </table>
+            <button class="btn" @click="getData(null, null)">Ver todo</button>
+            <DataTable 
+            title="Productos" 
+            :columns="[
+                { key: 'name', label: 'Nombre' },
+                { key: 'stock', label: 'Existencia' },
+                { key: 'category', label: 'Categoría' },
+                { key: 'price', label: 'Precio' },
+                { key: 'price_type', label: 'Tipo' }
+                ]"
+                :data="products"
+                :loading="isLoading"
+                :searchable="true"
+                :sortable="true"
+                @edit="modalEditHandler"
+                @delete="deleteSelected"
+                @add="modalAddHandler"
+            />
             <div class="pagination">
                     <button 
                     v-for="pageNumber in pagesNumber" 
@@ -88,13 +61,15 @@ import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import ModalProducts from '../components/registro/ModalProducts.vue';
 import ModalEditProducts from '../components/registro/ModalEditProducts.vue';
+import DataTable from '../components/UI/DataTable.vue';
 
 const URL = "http://localhost:3000/api/inventory/products";
 
 export default {
     components: {
         ModalProducts,
-        ModalEditProducts
+        ModalEditProducts,
+        DataTable
     },
     setup() {
         const products = ref([]);
@@ -107,9 +82,6 @@ export default {
         const currentPage = ref(1)
         const pageLimit = ref(12)
         const toEditProduct = ref({})
-
-        const sortOrder = ref('desc');
-        const currentSortProperty = ref(null);
 
         const modalAddHandler = () => {
             modalShow.value = !modalShow.value;
@@ -139,9 +111,9 @@ export default {
             getData();
         };
 
-        const deleteSelected = () => {
+        const deleteSelected = (productsSelected) => {
             axios.delete(URL, {
-                data: { ids: selectedProducts.value },
+                data: { ids: productsSelected },
                 headers: { 'Content-Type': 'application/json' }
             }).then(() => {
                 getData();
@@ -177,32 +149,6 @@ export default {
                 }
         }
 
-        const sortByProperty = (property) => {
-            if (currentSortProperty.value === property) {
-                sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortOrder.value = 'desc';
-                currentSortProperty.value = property;
-            }
-
-            products.value = [...products.value].sort((a, b) => {
-                let valueA = a[property];
-                let valueB = b[property];
-
-                if (typeof valueA === "number" && typeof valueB === "number") {
-                    return sortOrder.value === 'asc' ? valueA - valueB : valueB - valueA;
-                }
-
-                if (typeof valueA === "string" && typeof valueB === "string") {
-                    return sortOrder.value === 'asc' 
-                        ? valueA.localeCompare(valueB) 
-                        : valueB.localeCompare(valueA);
-                }
-
-                return 0;
-            });
-        };
-
         const filteredProducts = computed(() => {
             return searchQuery.value
                 ? products.value.filter(product => 
@@ -228,14 +174,14 @@ export default {
             deleteSelected,
             closeAndReload,
             loading,
-            sortByProperty,
             searchQuery,
             pagesNumber,
             changePage,
             currentPage,
             modalEdit,
             modalEditHandler,
-            toEditProduct
+            toEditProduct,
+            getData
         };
     }
 };
