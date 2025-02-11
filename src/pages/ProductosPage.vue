@@ -5,7 +5,6 @@
     <div class="tableDiv">
         <div class="botones">
             <button class="btn blue darken-1" @click="modalAddHandler"><i class="material-icons">add</i></button>
-            <button class="btn amber darken-3"><i class="material-icons">edit</i></button>
             <button class="btn red darken-4" @click="deleteSelected"><i class="material-icons">delete</i></button>
             <div class="input-field col s6">
                 <input 
@@ -17,37 +16,49 @@
             </div>
         </div>
         <Transition>
-        <table v-if="!loading">
-            <thead>
-                <tr>
-                    <th @click="sortByProperty('name')" class="headerTable">Nombre</th>
-                    <th @click="sortByProperty('stock')" class="headerTable">Existencia</th>
-                    <th @click="sortByProperty('category')" class="headerTable">Categoría</th>
-                    <th @click="sortByProperty('price')" class="headerTable">Precio</th>
-                    <th @click="sortByProperty('price_type')" class="headerTable">Tipo</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="product in filteredProducts" :key="product.id" 
-                    :class="{ selected: selectedProducts.includes(product.id)}" 
+        <div class="tableContainer" v-if="!loading">
+            <table>
+                <thead>
+                    <tr>
+                        <th @click="sortByProperty('name')" class="headerTable">Nombre</th>
+                        <th @click="sortByProperty('stock')" class="headerTable">Existencia</th>
+                        <th @click="sortByProperty('category')" class="headerTable">Categoría</th>
+                        <th @click="sortByProperty('price')" class="headerTable">Precio</th>
+                        <th @click="sortByProperty('price_type')" class="headerTable">Tipo</th>
+                        <th>Editar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="product in filteredProducts" :key="product.id" 
+                    :class="{ selected: selectedProducts.includes(product.id),
+                              rowNormal: true
+                    }" 
                     @click="toggleSelection(product.id)">
                     <td>{{ product.name }}</td>
                     <td>{{ product.stock }}</td>
                     <td>{{ product.category }}</td>
                     <td>{{ product.price }} Bs</td>
                     <td>{{ product.price_type }}</td>
-                </tr>
-            </tbody>
+                    <td 
+                    class="editTd">
+                    <i 
+                    @click="modalEditHandler(product)"
+                    class="material-icons">edit</i></td>
+                    </tr>
+                </tbody>
+            </table>
             <div class="pagination">
-                <button 
-                v-for="pageNumber in pagesNumber" 
-                :key="pageNumber" 
-                @click="changePage(pageNumber)"
-                :class="{ active: currentPage === pageNumber }">
-                {{ pageNumber }}
-                </button>
+                    <button 
+                    v-for="pageNumber in pagesNumber" 
+                    :key="pageNumber" 
+                    @click="changePage(pageNumber)"
+                    :class="{ activePagination: currentPage === pageNumber,
+                    'paginacionButtons': true
+                     }">
+                    {{ pageNumber }}
+                    </button>
             </div>
-        </table>
+        </div>
         <div v-else>
             <div class="loading">
                 <i class="material-icons loadingIcon">hourglass_empty</i>
@@ -58,7 +69,16 @@
             <ModalProducts 
             v-if="modalShow"
             @close-modal="modalAddHandler"
-            @closeAndReload="closeAndReload"></ModalProducts>
+            @closeAndReload="closeAndReload">
+            </ModalProducts>
+        </Transition>
+        <Transition>
+            <ModalEditProducts
+            v-if="modalEdit"
+            @close-modal="modalEditHandler"
+            @closeAndReload="closeAndReload"
+            :product="toEditProduct">
+            </ModalEditProducts>
         </Transition>
     </div>
 </template>
@@ -67,22 +87,26 @@
 import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import ModalProducts from '../components/registro/ModalProducts.vue';
+import ModalEditProducts from '../components/registro/ModalEditProducts.vue';
 
 const URL = "http://localhost:3000/api/inventory/products";
 
 export default {
     components: {
-        ModalProducts
+        ModalProducts,
+        ModalEditProducts
     },
     setup() {
         const products = ref([]);
         const modalShow = ref(false);
+        const modalEdit = ref(false);
         const selectedProducts = ref([]);
         const loading = ref(true);
         const searchQuery = ref("");
         const pagesNumber = ref(0)
         const currentPage = ref(1)
         const pageLimit = ref(12)
+        const toEditProduct = ref({})
 
         const sortOrder = ref('desc');
         const currentSortProperty = ref(null);
@@ -90,6 +114,16 @@ export default {
         const modalAddHandler = () => {
             modalShow.value = !modalShow.value;
         };
+
+        const modalEditHandler = (product) => {
+            if(!product){
+                toEditProduct.value = {}
+                modalEdit.value = false
+            }else{            
+                modalEdit.value = !modalEdit.value
+                toEditProduct.value = product
+            }
+        }
 
         const toggleSelection = (id) => {
             const index = selectedProducts.value.indexOf(id);
@@ -179,6 +213,9 @@ export default {
 
         onMounted(() => {
             getData(currentPage.value, pageLimit.value);
+            axios.get(`http://localhost:3000/api/inventory/categories`).then(res => {
+                console.log(res)
+            })
         });
 
         return {
@@ -194,7 +231,11 @@ export default {
             sortByProperty,
             searchQuery,
             pagesNumber,
-            changePage
+            changePage,
+            currentPage,
+            modalEdit,
+            modalEditHandler,
+            toEditProduct
         };
     }
 };
@@ -213,7 +254,7 @@ th{
 
 table{
     width: 90vw;
-    margin-bottom: 5em;
+    margin-bottom: 1em;
 }
 
 .tableDiv{
@@ -272,5 +313,34 @@ table{
 
 .headerTable{
     cursor: pointer;
+}
+
+.tableContainer{
+    margin-bottom: 5em;
+}
+
+.paginacionButtons{
+    padding: 0.6em 0.8em;
+    background-color: white;
+    border: 1px solid #213547;
+    border-radius: 3px;
+    margin-right: 1em;
+    cursor: pointer;
+}
+
+.activePagination{
+    background-color: #213547;
+    color: white;
+}
+
+.rowNormal{
+    cursor: pointer;
+}
+
+.editTd{
+    font-size: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 </style>
