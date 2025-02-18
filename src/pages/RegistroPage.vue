@@ -1,20 +1,40 @@
 <template>
     <div class="tableDiv">
+        <div class="filtros">
+            <h3>Filtros:</h3>
+            <div class="fechas">
+                <input 
+                v-model="startDate"
+                class="dateInput" 
+                type="date">
+                <input 
+                v-model="endDate"
+                class="dateInput" 
+                type="date">
+                <input placeholder="Producto"
+                v-model="productFilter"
+                class="dateInput"
+                type="text">
+            </div>
+            <div>
+                <button class="btn" @click="filterRegisters">Filtrar</button>
+            </div>
+        </div>
         <Transition>
         <div class="tableContainer" v-if="!loading">
             <DataTable 
-            title="Productos" 
+            title="Registro" 
             :columns="[
                 { key: 'product_id', label: 'Producto' },
                 { key: 'quantity', label: 'Cantidad' },
-                { key: 'type_of_quantity', label: 'Precio' },
+                { key: 'type_of_quantity', label: 'Presentación' },
                 { key: 'type', label: 'Tipo' },
-                { key: 'weight', label: 'Peso'},
+                { key: 'weight', label: 'Peso (Kg)'},
                 { key: 'provider', label: 'Proveedor'},
                 { key: 'date', label: 'Fecha'},
+                { key: 'price', label: 'Precio'},
                 { key: 'payed', label: 'Cancelado'},
                 { key: 'owed', label: 'Pendiente'},
-                { key: 'price', label: 'Precio'}
                 ]"
                 :data="products"
                 :loading="isLoading"
@@ -50,12 +70,12 @@
             ></ModalRegister>
         </Transition>
         <Transition>
-            <ModalEditProducts
+            <ModalEditRegistro
             v-if="modalEdit"
             @close-modal="modalEditHandler"
             @closeAndReload="closeAndReload"
-            :product="toEditProduct">
-            </ModalEditProducts>
+            :supply="toEditProduct">
+            </ModalEditRegistro>
         </Transition>
     </div>
 </template>
@@ -67,15 +87,17 @@ import ModalProducts from '../components/registro/ModalProducts.vue';
 import ModalEditProducts from '../components/registro/ModalEditProducts.vue';
 import DataTable from '../components/UI/DataTable.vue';
 import ModalRegister from '../components/registro/ModalRegister.vue';
+import ModalEditRegistro from '../components/registro/ModalEditRegistro.vue';
 
-const URL = "http://localhost:3000/api/inventory";
+const URL = "http://192.168.1.200:3000/api";
 
 export default {
     components: {
         ModalProducts,
         ModalEditProducts,
         DataTable,
-        ModalRegister
+        ModalRegister,
+        ModalEditRegistro
     },
     setup() {
         const products = ref([]);
@@ -88,6 +110,13 @@ export default {
         const currentPage = ref(1)
         const pageLimit = ref(12)
         const toEditProduct = ref({})
+        const startDate = ref()
+        const endDate = ref()
+        const productFilter = ref("")
+        
+        const reverseArray = (arr) => {
+            return arr.slice().reverse();
+        }
 
         const modalAddHandler = () => {
             modalShow.value = !modalShow.value;
@@ -114,11 +143,12 @@ export default {
 
         const closeAndReload = () => {
             modalShow.value = false;
+            modalEdit.value = false;
             getData();
         };
 
         const deleteSelected = (productsSelected) => {
-            axios.delete(URL, {
+            axios.delete(`${URL}/supply/register`, {
                 data: { ids: productsSelected },
                 headers: { 'Content-Type': 'application/json' }
             }).then(() => {
@@ -131,19 +161,17 @@ export default {
         const getData = (pages, limit) => {
             loading.value = true;
             if(!pages && !limit){
-                axios.get(`${URL}/supply?all=true`)
+                axios.get(`${URL}/supply/register?all=true`)
                 .then(response => {
-                    products.value = response.data.supply;
-                    console.log(response.data)
+                    products.value = reverseArray(response.data.supply);
                     loading.value = false;
                 });
             }else{
-                axios.get(`${URL}/supply?page=${pages}&limit=${limit}`)
+                axios.get(`${URL}/supply/register?page=${pages}&limit=${limit}`)
                 .then(response => {
-                    products.value = response.data.supply;
+                    products.value = reverseArray(response.data.supply);
                     pagesNumber.value = response.data.totalPages
                     loading.value = false;
-                    console.log(response.data)
                 });
             }
         };
@@ -163,9 +191,17 @@ export default {
                 : products.value;
         });
 
+        const filterRegisters = () => {
+            loading.value = true
+            axios.get(`${URL}/supply/register?all=true&startDate=${startDate.value}&endDate=${endDate.value}&productIds=${productFilter.value}`).then( response => {
+                products.value = reverseArray(response.data.supply)
+                loading.value = false
+            })
+        }
+
         onMounted(() => {
             getData(currentPage.value, pageLimit.value);
-            axios.get(`http://localhost:3000/api/inventory/categories`).then(res => {
+            axios.get(`http://192.168.1.200:3000/api/inventory/categories`).then(res => {
                 console.log(res)
             })
         });
@@ -186,67 +222,17 @@ export default {
             currentPage,
             modalEdit,
             modalEditHandler,
-            toEditProduct
+            toEditProduct,
+            startDate,
+            endDate,
+            filterRegisters,
+            productFilter
         };
     }
 };
 </script>
 
 <style setup>
-th, td{
-    padding: 0.7em 1em;
-}
-
-th{
-    background-color: #213547;
-    color: white;
-    border-radius: 0px;
-}
-
-table{
-    width: 90vw;
-    margin-bottom: 1em;
-}
-
-.tableDiv{
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-}
-
-.titleDiv{
-    width: 100%;
-    display: flex;
-    margin: 1em;
-}
-
-.pagado{
-    color: rgb(7, 99, 7);
-}
-
-.deuda{
-    color: rgb(117, 15, 15);
-}
-
-.botones{
-    padding: 1em;
-    width: 90vw; 
-}
-
-.botones button {
-    margin: 1em 1em 1em 0em;
-}
-
-.selected {
-    background-color: #d3d3d3; /* Color gris claro para indicar selección */
-    cursor: pointer;
-}
-
-.item{
-    cursor: pointer;
-}
 
 .v-enter-active,
 .v-leave-active {
@@ -293,5 +279,24 @@ table{
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.fechas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 35%;
+}
+
+.filtros {
+    width: 90vw;
+}
+
+.dateInput {
+    max-width: 170px;
+}
+
+@media(max-width: 768px){
+    
 }
 </style>

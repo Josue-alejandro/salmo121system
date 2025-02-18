@@ -71,7 +71,7 @@
 import axios from 'axios';
 import { ref, onMounted, watch} from 'vue';
 
-const URL = 'http://localhost:3000/api/inventory'
+const URL = 'http://192.168.1.200:3000/api/inventory'
 export default{
     emits: ['closeAndReload'],
     setup(_, { emit }){

@@ -63,7 +63,7 @@ import ModalProducts from '../components/registro/ModalProducts.vue';
 import ModalEditProducts from '../components/registro/ModalEditProducts.vue';
 import DataTable from '../components/UI/DataTable.vue';
 
-const URL = "http://localhost:3000/api/inventory/products";
+const URL = "http://192.168.1.200:3000/api/inventory/products";
 
 export default {
     components: {
@@ -91,6 +91,7 @@ export default {
             if(!product){
                 toEditProduct.value = {}
                 modalEdit.value = false
+                console.log(modalEdit.value)
             }else{            
                 modalEdit.value = !modalEdit.value
                 toEditProduct.value = product
@@ -108,7 +109,9 @@ export default {
 
         const closeAndReload = () => {
             modalShow.value = false;
-            getData();
+            modalEdit.value = false
+            console.log("hola")
+            getData(null, null);
         };
 
         const deleteSelected = (productsSelected) => {
@@ -159,7 +162,7 @@ export default {
 
         onMounted(() => {
             getData(currentPage.value, pageLimit.value);
-            axios.get(`http://localhost:3000/api/inventory/categories`).then(res => {
+            axios.get(`http://192.168.1.200:3000/api/inventory/categories`).then(res => {
                 console.log(res)
             })
         });
@@ -188,59 +191,11 @@ export default {
 </script>
 
 <style setup>
-th, td{
-    padding: 0.7em 1em;
-}
-
-th{
-    background-color: #213547;
-    color: white;
-    border-radius: 0px;
-}
-
-table{
-    width: 90vw;
-    margin-bottom: 1em;
-}
-
 .tableDiv{
-    width: 100%;
     display: flex;
     justify-content: center;
     flex-direction: column;
     align-items: center;
-}
-
-.titleDiv{
-    width: 100%;
-    display: flex;
-    margin: 1em;
-}
-
-.pagado{
-    color: rgb(7, 99, 7);
-}
-
-.deuda{
-    color: rgb(117, 15, 15);
-}
-
-.botones{
-    padding: 1em;
-    width: 90vw; 
-}
-
-.botones button {
-    margin: 1em 1em 1em 0em;
-}
-
-.selected {
-    background-color: #d3d3d3; /* Color gris claro para indicar selección */
-    cursor: pointer;
-}
-
-.item{
-    cursor: pointer;
 }
 
 .v-enter-active,
@@ -263,15 +218,6 @@ table{
 
 .tableContainer{
     margin-bottom: 5em;
-}
-
-.paginacionButtons{
-    padding: 0.6em 0.8em;
-    background-color: white;
-    border: 1px solid #213547;
-    border-radius: 3px;
-    margin-right: 1em;
-    cursor: pointer;
 }
 
 .activePagination{

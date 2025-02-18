@@ -1,7 +1,4 @@
 <template>
-    <div class="titleDiv">
-        <h5>{{ title }}</h5>
-    </div>
     <div class="tableDiv">
         <div class="botones">
             <button class="btn blue darken-1" @click="$emit('add')">
@@ -132,3 +129,127 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+th, td{
+    padding: 0.7em 1em;
+    white-space: nowrap; /* Evita que el texto se desborde */
+    text-align: left;
+}
+
+th{
+    background-color: #213547;
+    color: white;
+    border-radius: 0px;
+}
+
+table{
+    width: 90vw;
+    margin-bottom: 1em;
+    min-width: 600px; /* Asegura que la tabla no se colapse en pantallas pequeñas */
+    border-collapse: collapse;
+}
+
+.titleDiv{
+    width: 100%;
+    display: flex;
+    margin: 1em;
+}
+
+.pagado{
+    color: rgb(7, 99, 7);
+}
+
+.deuda{
+    color: rgb(117, 15, 15);
+}
+
+.botones{
+    padding: 1em;
+    width: 90vw; 
+    display: flex;
+    align-items: center;
+}
+
+.botones button {
+    margin: 1em 1em 1em 0em;
+}
+
+.selected {
+    background-color: #d3d3d3; /* Color gris claro para indicar selección */
+    cursor: pointer;
+}
+
+.item{
+    cursor: pointer;
+}
+
+.loadingIcon{
+    font-size: 80px;
+}
+
+.headerTable{
+    cursor: pointer;
+}
+
+.tableContainer{
+    margin-bottom: 5em;
+    overflow-x: auto; /* Permite el scroll en pantallas pequeñas */
+}
+
+.paginacionButtons{
+    padding: 0.6em 0.8em;
+    background-color: white;
+    border: 1px solid #213547;
+    border-radius: 3px;
+    margin-right: 1em;
+    cursor: pointer;
+}
+
+.activePagination{
+    background-color: #213547;
+    color: white;
+}
+
+.rowNormal{
+    cursor: pointer;
+}
+
+.editTd{
+    font-size: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilos para dispositivos móviles */
+@media (max-width: 768px) {
+    .tableDiv {
+        align-items: flex-start;
+    }
+
+    .tableContainer {
+        width: 100%;
+        overflow-x: auto;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        min-width: 95%;
+    }
+
+    th, td {
+        padding: 0.5em;
+        font-size: 0.9em;
+    }
+
+    .botones {
+        flex-direction: column;
+    }
+}
+</style>

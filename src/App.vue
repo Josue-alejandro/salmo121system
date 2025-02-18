@@ -1,4 +1,6 @@
 <script setup>
+import { RouterLink } from 'vue-router';
+
 </script>
 
 <template>
@@ -6,8 +8,8 @@
       <nav>
         <div class="nav-wrapper navigationBar">
           <ul class="right">
-            <li><a href="#">Inventario</a></li>
-            <li><a href="#">Registro</a></li>
+            <li><RouterLink to="/productos">Inventario</RouterLink></li>
+            <li><router-link to="/registro">Registro</router-link></li>
             <li><a href="#">Empleados</a></li>
             <li><a href="#">Proveedores</a></li>
           </ul>

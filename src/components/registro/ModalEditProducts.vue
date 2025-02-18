@@ -72,7 +72,7 @@
 import axios from 'axios';
 import { ref, onMounted, watch } from 'vue';
 
-const URL = 'http://localhost:3000/api/inventory';
+const URL = 'http://192.168.1.200:3000/api/inventory';
 export default {
     props: {
         product: Object // Recibe el producto a editar

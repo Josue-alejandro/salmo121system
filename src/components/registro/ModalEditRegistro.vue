@@ -6,13 +6,13 @@
                 class="material-icons modalClose" 
                 @click="$emit('close-modal')">close</i>
             </div>
-            <form action="#" method="post" @submit.prevent="sendSupply">
+            <form action="#" method="post" @submit.prevent="updateSupply">
 
                 <!-- Producto -->
                 <div class="selectInput">
                     <i class="material-icons prefix">shopping_basket</i>
                     <select v-model="product_id">
-                        <option value="" disabled selected>Selecciona un producto</option>
+                        <option value="" disabled>Selecciona un producto</option>
                         <option 
                         v-for="product in products"
                         :key="product.id"
@@ -72,7 +72,7 @@
                 <div class="selectInput">
                     <i class="material-icons prefix">account_circle</i>
                     <select v-model="provider">
-                        <option value="" disabled selected>Selecciona un proveedor</option>
+                        <option value="" disabled>Selecciona un proveedor</option>
                         <option 
                         v-for="prov in providers"
                         :key="prov.id"
@@ -124,7 +124,7 @@
                     class="validate">
                 </div>
 
-                <input class="btn sendButton" type="submit" value="Guardar">
+                <input class="btn sendButton" type="submit" value="Actualizar">
             </form>
         </div>
     </div>
@@ -132,17 +132,20 @@
 
 <script>
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
-const URL = 'http://192.168.1.200:3000/api/supply/register';
+const BASE_URL = 'http://192.168.1.200:3000/api/supply/register';
 
 export default {
+    props: {
+        supply: Object  // Recibe el registro a editar
+    },
     emits: ['closeAndReload'],
-    setup(_, { emit }) {
+    setup(props, { emit }) {
         const products = ref([]);
         const providers = ref([]);
-        
-        // Datos del formulario
+
+        // Datos del formulario (se llenarán con la `supply` recibida)
         const product_id = ref("");
         const quantity = ref(0);
         const type_of_quantity = ref("");
@@ -154,11 +157,24 @@ export default {
         const owed = ref("0.00");
         const price = ref("0.00");
 
-        const sortByName = (arr) => {
-            return arr.slice().sort((a, b) => a.name.localeCompare(b.name));
-        }
+        // Rellenar los campos con los datos actuales de `supply`
+        watch(() => props.supply, (newSupply) => {
+            if (newSupply) {
+                product_id.value = newSupply.product_id;
+                quantity.value = newSupply.quantity;
+                type_of_quantity.value = newSupply.type_of_quantity;
+                type.value = newSupply.type;
+                weight.value = newSupply.weight;
+                provider.value = newSupply.provider;
+                date.value = newSupply.date;
+                payed.value = newSupply.payed;
+                owed.value = newSupply.owed;
+                price.value = newSupply.price;
+            }
+        }, { immediate: true });
 
-        const sendSupply = () => {
+        // Enviar actualización
+        const updateSupply = () => {
             const data = {
                 product_id: product_id.value,
                 quantity: quantity.value,
@@ -172,30 +188,28 @@ export default {
                 price: price.value
             };
 
-            console.log("Enviando datos:", data);
+            console.log("Actualizando datos:", data);
 
-            axios.post(URL, data, {
+            axios.put(`${BASE_URL}/${props.supply.id}`, data, {
                 headers: { 'Content-Type': 'application/json' }
             })
             .then(res => {
                 console.log(res);
-                if (res.status === 201) {
+                if (res.status === 200) {
                     emit("closeAndReload");
                 }
             })
-            .catch(error => console.error("Error al enviar:", error));
+            .catch(error => console.error("Error al actualizar:", error));
         };
 
+        // Cargar productos y proveedores
         onMounted(() => {
             axios.get('http://192.168.1.200:3000/api/inventory/products?all=true')
-                .then(res => {
-                    console.log(res)
-                    products.value = sortByName(res.data.products)}
-                )
+                .then(res => products.value = res.data.products)
                 .catch(error => console.error("Error cargando productos:", error));
 
             axios.get('http://192.168.1.200:3000/api/provider/get')
-                .then(res => providers.value = sortByName(res.data.providers))
+                .then(res => providers.value = res.data.providers)
                 .catch(error => console.error("Error cargando proveedores:", error));
         });
 
@@ -212,7 +226,7 @@ export default {
             payed,
             owed,
             price,
-            sendSupply
+            updateSupply
         };
     }
 }
@@ -302,5 +316,4 @@ form {
         margin-bottom: 5px;
     }
 }
-
 </style>
